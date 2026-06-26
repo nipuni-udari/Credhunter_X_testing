@@ -1,59 +1,82 @@
-name: CredHunter-X Quick Severity Mix Test
+name: CredHunter-X LLM Pipeline
 
 on:
-  workflow_dispatch:
   push:
-    branches: ["**"]
+    branches:
+      - "**"
+
+  pull_request:
+    branches:
+      - "**"
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+  security-events: write
+  actions: read
 
 jobs:
-  scan:
+  credhunter-x:
+    name: Scan with CredHunter-X
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      security-events: write
-    steps:
-      - name: Checkout test project
-        uses: actions/checkout@v4
 
-      - name: Run CredHunter-X
+    steps:
+      - name: Checkout demo project
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run CredHunter-X LLM pipeline
         id: credhunter
         uses: nipuni-udari/CredHunter-X@main
         continue-on-error: true
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         with:
           scan_path: "."
           config: ".credhunter.yml"
-          fail_on: critical
+          fail_on: high
           enable_llm: "true"
           llm_workflow: single
           llm_rank: "true"
           llm_explain: "true"
           llm_remediate: "true"
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
-      - name: Show CredHunter-X summary files
+      - name: Debug generated reports
         if: always()
         run: |
-          echo "Root files:"
+          echo "===== Current Directory ====="
+          pwd
+
+          echo "===== CredHunter Reports ====="
+          find . -type f | grep "credhunter-report" || true
+
+          echo "===== Root Directory Files ====="
           ls -la
-          echo "Reports:"
-          ls -la credhunter-report.* || true
 
       - name: Upload CredHunter-X reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: credhunter-severity-mix-reports
+          name: credhunter-x-reports
           if-no-files-found: warn
           path: |
             credhunter-report.json
             credhunter-report.sarif
             credhunter-report.md
             credhunter-report.html
-            expected/ground_truth.csv
 
-      - name: Fail job if blocking secrets were found
+      - name: Upload SARIF to GitHub Code Scanning
+        if: ${{ always() && hashFiles('credhunter-report.sarif') != '' }}
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: credhunter-report.sarif
+
+      - name: Fail job if CredHunter-X found blocking secrets
         if: steps.credhunter.outcome == 'failure'
         run: |
-          echo "CredHunter-X found blocking secrets. Reports were generated and uploaded."
+          echo "CredHunter-X found blocking secrets."
+          echo "Reports were generated and uploaded before failing the job."
           exit 1
