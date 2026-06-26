@@ -1,0 +1,50 @@
+title = "CredHunter-X quick severity mix synthetic rules"
+
+[allowlist]
+paths = [
+  '''expected/.*''',
+  '''reports/.*''',
+  '''\.github/.*'''
+]
+
+[[rules]]
+id = "synthetic-github-token"
+description = "Synthetic GitHub token"
+regex = '''ghp_[A-Za-z0-9_]{20,}'''
+secretGroup = 0
+keywords = ["ghp_"]
+
+[[rules]]
+id = "synthetic-openai-key"
+description = "Synthetic OpenAI key"
+regex = '''sk-proj-[A-Za-z0-9_]{20,}|sk-[A-Za-z0-9_]{20,}'''
+secretGroup = 0
+keywords = ["sk-proj-", "sk-"]
+
+[[rules]]
+id = "synthetic-database-url"
+description = "Synthetic database URL with credentials"
+regex = '''postgres://[^\s"']+:[^\s"']+@[^\s"']+'''
+secretGroup = 0
+keywords = ["postgres://"]
+
+[[rules]]
+id = "synthetic-service-token"
+description = "Synthetic generic service token"
+regex = '''svc_live_[A-Za-z0-9_]{16,}'''
+secretGroup = 0
+keywords = ["svc_live_"]
+
+[[rules]]
+id = "synthetic-local-dev-secret"
+description = "Synthetic low-risk local dev secret"
+regex = '''local-dev-secret-[A-Za-z0-9\-]{8,}'''
+secretGroup = 0
+keywords = ["local-dev-secret"]
+
+[[rules]]
+id = "synthetic-placeholder"
+description = "Synthetic placeholder token"
+regex = '''YOUR_API_KEY_HERE|YOUR\*\*\*\*HERE'''
+secretGroup = 0
+keywords = ["YOUR_API_KEY_HERE", "YOUR****HERE"]

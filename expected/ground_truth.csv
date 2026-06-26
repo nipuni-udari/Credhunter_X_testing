@@ -1,0 +1,10 @@
+file,line,label,expected_risk,expected_action,description
+src/severity_mix.py,7,true,critical,fail,Fake GitHub-style token should be critical/blocking
+src/severity_mix.py,10,true,high,fail_or_warn,Fake OpenAI-style API key should be high or critical
+src/severity_mix.py,13,true,high,fail_or_warn,Fake database URL with embedded credentials should be high
+src/severity_mix.py,16,true,medium,warn,Generic service token should be medium warning
+src/severity_mix.py,19,true_or_low,low,pass,Local development secret should be low/pass
+src/severity_mix.py,22,false,ignored,ignore,Clear placeholder should be ignored
+src/severity_mix.py,25,false,ignored,ignore,Masked placeholder should be ignored
+src/env_safe.py,6,false,ignored,ignore,os.getenv should be safe/ignored
+src/env_safe.py,7,false,ignored,ignore,os.environ.get should be safe/ignored

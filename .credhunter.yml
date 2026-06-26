@@ -1,0 +1,3 @@
+# CredHunter-X quick severity-mix test config.
+# All values in this project are synthetic and non-functional.
+fail_on: critical

@@ -1,0 +1,59 @@
+name: CredHunter-X Quick Severity Mix Test
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["**"]
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout test project
+        uses: actions/checkout@v4
+
+      - name: Run CredHunter-X
+        id: credhunter
+        uses: nipuni-udari/CredHunter-X@main
+        continue-on-error: true
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        with:
+          scan_path: "."
+          config: ".credhunter.yml"
+          fail_on: critical
+          enable_llm: "true"
+          llm_workflow: single
+          llm_rank: "true"
+          llm_explain: "true"
+          llm_remediate: "true"
+
+      - name: Show CredHunter-X summary files
+        if: always()
+        run: |
+          echo "Root files:"
+          ls -la
+          echo "Reports:"
+          ls -la credhunter-report.* || true
+
+      - name: Upload CredHunter-X reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: credhunter-severity-mix-reports
+          if-no-files-found: warn
+          path: |
+            credhunter-report.json
+            credhunter-report.sarif
+            credhunter-report.md
+            credhunter-report.html
+            expected/ground_truth.csv
+
+      - name: Fail job if blocking secrets were found
+        if: steps.credhunter.outcome == 'failure'
+        run: |
+          echo "CredHunter-X found blocking secrets. Reports were generated and uploaded."
+          exit 1
